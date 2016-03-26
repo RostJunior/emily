@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+                    http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+                    http://www.springframework.org/schema/security 
+                    http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+
+	<http use-expressions="true">
+		<intercept-url pattern="/securedAdmin/**" access="hasRole('Admin')" />
+		<intercept-url pattern="/dostavka*" access="hasRole('Admin')" />
+		<intercept-url pattern="/admin**" access="hasRole('Admin')" />
+		<intercept-url pattern="/edit*/**" access="hasRole('Admin')" />
+		<intercept-url pattern="/personalAccount*" access="hasRole('Admin')" />
+		<intercept-url pattern="/usersList*" access="hasRole('Admin')" />
+		
+		<intercept-url pattern="/users/**" access="hasRole('Admin') or hasRole('User') or hasRole('anonymousUser')" />
+		
+		<form-login login-processing-url="/login" login-page="/loginPage"
+			default-target-url="/index" username-parameter="emailUser"
+			password-parameter="passwordUser" authentication-failure-url="/loginPage?auth=fail" />
+		<logout logout-url="/logout" logout-success-url="/index" delete-cookies="JSESSIONID" />
+		<anonymous username="Гость" granted-authority="anonymousUser" />
+		<remember-me 
+		token-validity-seconds="1209600"
+		remember-me-parameter="remember-me"/>
+	</http>
+
+	<authentication-manager>
+		<authentication-provider>
+		
+		<!-- <user-service>
+				<user name="admin" password="admin" authorities="Admin" />
+			</user-service> -->
+			<jdbc-user-service data-source-ref="dataSource"
+				authorities-by-username-query="SELECT u.emailUsers, r.roles FROM
+			users u join roles r on u.roles_idRoles = r.idRoles WHERE u.emailUsers = ?"
+				users-by-username-query="SELECT emailUsers, passwordUsers, 'true' as enabled FROM users
+				WHERE emailUsers = ?" />
+		</authentication-provider>
+	</authentication-manager>
+
+	<beans:bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<beans:property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<beans:property name="url"
+			value="jdbc:mysql://localhost:3306/emily" />
+		<beans:property name="username" value="root" />
+		<beans:property name="password" value="1234" />
+	</beans:bean>
+
+	<global-method-security secured-annotations="enabled" />
+
+</beans:beans>
